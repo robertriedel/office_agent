@@ -41,6 +41,8 @@ A GUI window will appear. Click the "Push to Talk" button to issue voice command
 *   **Take Notes:** Say "take a note", and the agent will prompt you for the content. Notes are saved in the `notes/` directory.
 *   **Draft Emails:** Say "draft an email", and the agent will guide you through recipient, subject, and body. Drafts are saved in the `drafts/` directory.
 *   **List Notes:** Say "list my notes", and the agent will show and speak a list of your saved notes.
+*   **Search Notes:** Say "search my notes" and specify a keyword to find notes containing that text.
+*   **Help:** Say "help" to hear a summary of available commands.
 
 ## Speech Recognition
 *   The agent primarily uses CMU Sphinx for offline speech-to-text.

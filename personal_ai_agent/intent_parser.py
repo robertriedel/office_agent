@@ -26,9 +26,15 @@ def parse_intent(text: str) -> str | None:
 
     text_lower = text.lower() # Convert to lowercase for case-insensitive matching
 
+    # --- Help intent ---
+    if "help" in text_lower or "what can you do" in text_lower:
+        return "help"
+
     # --- Note-related intents ---
     # Check for general "note" or "notes" keywords first.
     if "note" in text_lower or "notes" in text_lower:
+        if "search" in text_lower or "find" in text_lower:
+            return "search_notes"
         # Keywords for listing notes. Order matters: more specific ("list notes") before general ("note").
         if "list" in text_lower or \
            "show" in text_lower or \
