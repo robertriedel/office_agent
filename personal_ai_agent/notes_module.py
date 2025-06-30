@@ -107,3 +107,40 @@ def list_notes() -> list[str] | None:
         # Catch any other unexpected errors.
         print(f"An unexpected error occurred while listing notes: {e_unexpected}")
         return None
+
+def search_notes(query: str) -> list[str] | None:
+    """Searches all notes for the given query string.
+
+    Args:
+        query: Keyword or phrase to search for.
+
+    Returns:
+        A list of note filenames that contain the query. Returns an empty list
+        if no matches are found. Returns None if the notes directory does not
+        exist or cannot be accessed.
+    """
+    if not os.path.exists(NOTES_DIR):
+        print(f"Error: Notes directory '{NOTES_DIR}' does not exist.")
+        return None
+
+    matches = []
+    try:
+        for filename in os.listdir(NOTES_DIR):
+            if filename.startswith("note_") and filename.endswith(".txt"):
+                filepath = os.path.join(NOTES_DIR, filename)
+                if os.path.isfile(filepath):
+                    try:
+                        with open(filepath, "r", encoding="utf-8") as f:
+                            contents = f.read().lower()
+                            if query.lower() in contents:
+                                matches.append(filename)
+                    except Exception as e_read:
+                        print(f"Error reading {filepath}: {e_read}")
+        if not matches:
+            print(f"No notes contain the query '{query}'.")
+            return []
+        print(f"Found {len(matches)} notes containing '{query}': {matches}")
+        return matches
+    except OSError as e_os:
+        print(f"Error searching notes directory: {e_os}")
+        return None

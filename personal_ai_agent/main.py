@@ -11,7 +11,7 @@ import os # Added for file operations
 from datetime import datetime # Added for timestamping meeting transcripts
 from audio_handler import speak, listen_and_transcribe
 from intent_parser import parse_intent
-from notes_module import save_note, list_notes, NOTES_DIR # Import NOTES_DIR
+from notes_module import save_note, list_notes, search_notes, NOTES_DIR # Import NOTES_DIR and search_notes
 from email_module import draft_email
 
 # --- Global Variables ---
@@ -114,6 +114,62 @@ def handle_list_notes_intent():
 
     if status_label: # Ensure GUI updates if it was a long list.
         status_label.winfo_toplevel().update_idletasks()
+
+
+def handle_search_notes_intent(command_text: str):
+    """Handles the 'search_notes' intent."""
+    global status_label
+
+    if status_label:
+        status_label.config(text="What keyword should I search for?")
+    speak("What keyword should I search for in your notes?")
+    query_text = listen_and_transcribe()
+    if not query_text or (isinstance(query_text, str) and query_text.startswith("Google STT error:")):
+        feedback = query_text or "I didn't catch the search keyword."
+        print(feedback)
+        speak(feedback)
+        if status_label:
+            status_label.config(text=feedback)
+        return
+
+    results = search_notes(query_text)
+    if results is None:
+        feedback = "Could not access the notes directory."
+    elif not results:
+        feedback = f"No notes found containing '{query_text}'."
+    else:
+        speak(f"I found {len(results)} notes containing {query_text}.")
+        display_names = [r.replace('.txt', '').replace('note_', '').replace('_', ' ') for r in results]
+        feedback = "\n".join(display_names[:5])
+        if len(display_names) > 5:
+            feedback += "\n(and more... see console for full list)"
+        for r in results[:3]:
+            try:
+                with open(os.path.join(NOTES_DIR, r), "r", encoding="utf-8") as f:
+                    first_line = f.readline().strip()
+                    if first_line:
+                        speak(f"Note snippet: {first_line[:50]}")
+            except Exception:
+                pass
+        print(f"Search results for '{query_text}': {results}")
+
+    print(feedback)
+    speak(feedback)
+    if status_label:
+        status_label.config(text=feedback)
+
+
+def handle_help_intent():
+    """Provides a short overview of supported commands."""
+    global status_label
+    help_text = (
+        "You can say: take a note, list notes, search notes, draft an email, "
+        "start meeting, stop meeting, or help."
+    )
+    print(help_text)
+    speak(help_text)
+    if status_label:
+        status_label.config(text=help_text)
 
 
 def handle_send_email_intent(command_text: str):
@@ -474,8 +530,13 @@ def on_record_button_pressed():
                     speak("Okay, I will draft an email.") 
                     handle_send_email_intent(transcribed_text)
                 elif intent == "list_notes":
-                    speak("Okay, I will list your notes.") 
+                    speak("Okay, I will list your notes.")
                     handle_list_notes_intent()
+                elif intent == "search_notes":
+                    speak("Searching your notes.")
+                    handle_search_notes_intent(transcribed_text)
+                elif intent == "help":
+                    handle_help_intent()
                 elif intent is not None: # An intent was parsed but not one of the above (and no meeting)
                     feedback = "I'm not sure how to help with that."
                     print(feedback)
